@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Pharmacy Expiry Monitoring - Amang Rodriguez Memorial Medical Center</title>
+  <?!= include('Styles'); ?>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="header-icon">🏥</div>
+        <div>
+          <div class="header-institution">AMANG RODRIGUEZ MEMORIAL MEDICAL CENTER</div>
+          <h1 class="header-title">Pharmacy Expiry Monitoring</h1>
+          <p class="header-subtitle">Hospital Storage Inventory, FEFO Expiry Tracking & Dispensing</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-outline btn-sm" onclick="loadInventory()" title="Refresh from Sheet">
+          🔄 Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Stats Banner -->
+    <section class="stats-banner">
+      <div class="stat-card total">
+        <div class="stat-icon">📦</div>
+        <div>
+          <div class="stat-value" id="stat-total-items">0</div>
+          <div class="stat-label">Total Batches</div>
+        </div>
+      </div>
+      <div class="stat-card total">
+        <div class="stat-icon">📊</div>
+        <div>
+          <div class="stat-value" id="stat-total-qty">0 units</div>
+          <div class="stat-label">Total Units in Storage</div>
+        </div>
+      </div>
+      <div class="stat-card critical">
+        <div class="stat-icon">🔴</div>
+        <div>
+          <div class="stat-value" id="stat-2026-count">0</div>
+          <div class="stat-label">2026 Critical Risk</div>
+        </div>
+      </div>
+      <div class="stat-card near">
+        <div class="stat-icon">🟠</div>
+        <div>
+          <div class="stat-value" id="stat-2027-count">0</div>
+          <div class="stat-label">2027 Near-Term</div>
+        </div>
+      </div>
+      <div class="stat-card zero">
+        <div class="stat-icon">⚠️</div>
+        <div>
+          <div class="stat-value" id="stat-zero-count">0</div>
+          <div class="stat-label">Out of Stock (0 Qty)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="tab-inventory">
+        📦 Inventory & Stock-Out
+      </button>
+      <button class="tab-btn" data-tab="tab-add">
+        ➕ Add Medicine / New Batch
+      </button>
+      <button class="tab-btn" data-tab="tab-restock">
+        🔄 Restock 0-Qty Items
+      </button>
+      <button class="tab-btn" data-tab="tab-logs">
+        📋 Stock-Out Audit Log
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <main class="tab-content-area">
+
+      <!-- TAB 1: INVENTORY & STOCK OUT -->
+      <section id="tab-inventory" class="tab-pane active">
+        <!-- Search and Filter Bar -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon-inside">🔍</span>
+            <input type="text" id="search-input" class="search-input" placeholder="Search by Item Code, Medicine Name, or Expiry (e.g. Feb-27)..." oninput="applyFilter()">
+          </div>
+
+          <select id="filter-status" class="filter-select" onchange="applyFilter()">
+            <option value="ALL">All Expiry Statuses</option>
+            <option value="CRITICAL_2026">🔴 2026 Critical Expiry</option>
+            <option value="NEAR_2027">🟠 2027 Near-Term Expiry</option>
+            <option value="SAFE">🟢 2028+ Safe Stock</option>
+            <option value="NO_EXPIRY">⚪ Missing Expiry Date</option>
+            <option value="ZERO">⚠️ Out of Stock (0 Qty)</option>
+            <option value="DONATION">💜 Donated Program Items</option>
+          </select>
+
+          <button class="btn btn-primary btn-sm" onclick="switchTab('tab-add')">
+            ➕ Add Item / Batch
+          </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="spinner-overlay" style="display:none;">
+          <div class="spinner"></div>
+          <div>Loading inventory from Google Sheets...</div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:140px;">Item Code</th>
+                <th>Medicine Description</th>
+                <th style="width:130px; text-align:right;">Storage Qty</th>
+                <th style="width:160px;">Expiry Status</th>
+                <th style="width:140px; text-align:right;">Quick Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 2: ADD MEDICINE / SMART BATCH INSERTION -->
+      <section id="tab-add" class="tab-pane">
+        <div class="form-card">
+          <h2 class="form-title">Add Medicine or New Batch</h2>
+          <p class="form-desc">
+            Enter the medicine details. If the Item Code already exists, the new batch will be <strong>automatically inserted directly below the last batch</strong> of that medicine in Google Sheets!
+          </p>
+
+          <div class="form-group" style="position:relative;">
+            <label class="form-label" for="add-code">Item Code (e.g., DMR000451, DMDON001151) *</label>
+            <input type="text" id="add-code" class="form-input" placeholder="Type or paste item code...">
+          </div>
+
+          <!-- Smart Batch Preview Box -->
+          <div id="add-batch-preview" class="batch-preview-box" style="display:none; margin-bottom:16px;">
+            <div id="add-batch-preview-content"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="add-desc">Medicine Description *</label>
+            <input type="text" id="add-desc" class="form-input" placeholder="e.g. FLUCONAZOLE 200MG CAPSULE">
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label class="form-label" for="add-qty">Initial Quantity in Storage *</label>
+              <input type="number" id="add-qty" class="form-input" placeholder="e.g. 500" min="0">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="add-exp">Expiry Date (e.g. Dec-28) *</label>
+              <input type="text" id="add-exp" class="form-input" placeholder="MMM-YY (e.g. Dec-28)">
+            </div>
+          </div>
+
+          <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-outline" onclick="switchTab('tab-inventory')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitAddNew()">✨ Save & Insert into Sheet</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: RESTOCK 0-QTY ITEMS -->
+      <section id="tab-restock" class="tab-pane">
+        <div style="margin-bottom:16px;">
+          <h2 style="font-size:16px; font-weight:700; color:var(--slate-900);">Zero-Quantity Items Replenishment</h2>
+          <p style="font-size:12px; color:var(--slate-500);">
+            Quickly update medicines that are currently out of stock. You can replace the old expiry date with the new batch expiry and enter the new incoming quantity.
+          </p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:140px;">Item Code</th>
+                <th>Medicine Description</th>
+                <th style="width:140px;">Old Expiry</th>
+                <th style="width:120px;">Current Stock</th>
+                <th style="width:200px; text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="restock-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: AUDIT LOG -->
+      <section id="tab-logs" class="tab-pane">
+        <div style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 style="font-size:16px; font-weight:700; color:var(--slate-900);">Stock-Out Dispensing Log</h2>
+            <p style="font-size:12px; color:var(--slate-500);">Real-time audit record of all dispensed medicines.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadLogs()">🔄 Refresh Log</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:150px;">Timestamp</th>
+                <th style="width:130px;">Item Code</th>
+                <th>Medicine Description</th>
+                <th style="width:110px;">Batch Expiry</th>
+                <th style="width:100px; text-align:right;">Qty Out</th>
+                <th style="width:120px; text-align:right;">Remaining</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: DEDUCT / STOCK OUT -->
+  <div id="modal-stock-out" class="modal-backdrop" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">➖ Record Stock-Out (Dispense)</div>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('modal-stock-out')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:16px;">
+          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;" id="so-code"></div>
+          <div style="font-size:14px; font-weight:700; color:#0f172a; margin:2px 0;" id="so-desc"></div>
+          <div style="font-size:12px; color:#475569;">
+            Batch Expiry: <strong id="so-exp"></strong> &nbsp;|&nbsp; Current Stock: <strong id="so-current-qty" style="color:#2563eb;"></strong>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="so-input-qty">Quantity Taken Out (Deducted) *</label>
+          <input type="number" id="so-input-qty" class="form-input" placeholder="Enter number of units..." min="1" oninput="updateStockOutPreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="so-remarks">Department / Ward / Remarks</label>
+          <input type="text" id="so-remarks" class="form-input" placeholder="e.g. OR / ICU / Ward 3 / Outpatient">
+        </div>
+
+        <div style="font-size:12px; color:#475569; margin-top:8px;">
+          New Balance in Storage: <strong id="so-remaining-preview">--</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-stock-out')">Cancel</button>
+        <button class="btn btn-danger" onclick="submitStockOut()">Confirm Stock-Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT / RESTOCK BATCH -->
+  <div id="modal-edit-batch" class="modal-backdrop" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Edit / Restock Medicine Batch</div>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-batch')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="edit-row-info" style="font-size:11px; color:#64748b; margin-bottom:12px; font-weight:600;"></div>
+
+        <div class="form-group">
+          <label class="form-label">Item Code</label>
+          <input type="text" id="edit-code" class="form-input" readonly style="background:#f1f5f9;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Medicine Description</label>
+          <input type="text" id="edit-desc" class="form-input">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Quantity in Storage</label>
+            <input type="number" id="edit-qty" class="form-input" min="0">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Expiry Date</label>
+            <input type="text" id="edit-exp" class="form-input" placeholder="e.g. Feb-28">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-edit-batch')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitEditBatch()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <?!= include('JavaScript'); ?>
+</body>
+</html>
