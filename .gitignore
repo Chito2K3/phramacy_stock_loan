@@ -1,18 +1,14 @@
-# Temporary Excel lock files
-~$*.xlsx
-~$*.xls
-
-# Large legacy files (>50MB archive)
-OLD_RAW FILE_2026/
-*.zip
-*.tar.gz
-
 # OS generated files
 Thumbs.db
+Thumbs.db:encryptable
 ehthumbs.db
-Desktop.ini
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-# Scratch & temporary logs
-*.log
+# Scratch and test files
+scratch/
+test_*.js
+node_modules/

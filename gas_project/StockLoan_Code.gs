@@ -123,7 +123,6 @@ function getTargetSheet(tabType) {
   let sheet = ss.getSheetByName(targetName);
   
   if (!sheet) {
-    // Case-insensitive search fallback
     const sheets = ss.getSheets();
     for (let i = 0; i < sheets.length; i++) {
       if (sheets[i].getName().trim().toUpperCase() === targetName.toUpperCase()) {
@@ -171,7 +170,6 @@ function detectColumns(sheet) {
     else if (title.includes('BALANCE') || title.includes('REMAINING')) colMap.remainingBal = idx + 1;
   });
 
-  // Default fallbacks if headers weren't named identically
   if (colMap.date === -1) colMap.date = 1;
   if (colMap.facility === -1) colMap.facility = 2;
   if (colMap.docNo === -1) colMap.docNo = 3;
@@ -187,9 +185,6 @@ function detectColumns(sheet) {
   return colMap;
 }
 
-/**
- * Format dates safely into YYYY-MM-DD string
- */
 function formatDateValue(val) {
   if (!val) return '';
   if (val instanceof Date) {
@@ -202,9 +197,6 @@ function formatDateValue(val) {
   return String(val).trim();
 }
 
-/**
- * Parses remarks to extract partial settlement info if dedicated columns are absent
- */
 function parsePartialFromRemarks(remarks, originalQty) {
   if (!remarks) return { partialQty: '', remainingBalance: '' };
   
@@ -218,8 +210,8 @@ function parsePartialFromRemarks(remarks, originalQty) {
 
   for (const m of numMatches) {
     const val = Number(m[1]);
-    if (val >= 1990 && val <= 2050) continue; // Skip year numbers
-    if (val === originalQty && count === 0) continue; // Skip original qty echo
+    if (val >= 1990 && val <= 2050) continue;
+    if (val === originalQty && count === 0) continue;
     totalPartial += val;
     count++;
   }
@@ -232,9 +224,6 @@ function parsePartialFromRemarks(remarks, originalQty) {
   return { partialQty, remainingBalance };
 }
 
-/**
- * Fetches all loan records for the specified tab (UTANG or PAUTANG)
- */
 function getLoanData(tabType) {
   try {
     const sheet = getTargetSheet(tabType);
@@ -271,7 +260,6 @@ function getLoanData(tabType) {
       let partialQtyRaw = cols.partialQty > 0 ? row[cols.partialQty - 1] : '';
       let remainingBalRaw = cols.remainingBal > 0 ? row[cols.remainingBal - 1] : '';
 
-      // Skip completely blank rows
       if (!facilityRaw && !itemDescRaw && !qtyRaw && !docNoRaw) {
         continue;
       }
@@ -280,7 +268,6 @@ function getLoanData(tabType) {
       const statusClean = String(statusRaw || 'UNPAID').trim();
       const isPartialStatus = statusClean.toUpperCase().includes('PARTIAL');
 
-      // If dedicated columns are empty or don't exist, parse from remarks
       if (isPartialStatus && (!partialQtyRaw || !remainingBalRaw)) {
         const parsed = parsePartialFromRemarks(remarksRaw, numQty);
         if (!partialQtyRaw && parsed.partialQty) partialQtyRaw = parsed.partialQty;
@@ -314,9 +301,6 @@ function getLoanData(tabType) {
   }
 }
 
-/**
- * Retrieves all distinct facility names across both UTANG and PAUTANG sheets
- */
 function getAllFacilities() {
   try {
     const ss = getSpreadsheet();
@@ -349,9 +333,6 @@ function getAllFacilities() {
   }
 }
 
-/**
- * Updates a loan record in Google Sheets
- */
 function updateLoanRecord(tabType, rowIndex, data) {
   try {
     const sheet = getTargetSheet(tabType);
@@ -393,7 +374,6 @@ function updateLoanRecord(tabType, rowIndex, data) {
       sheet.getRange(rowIndex, cols.remarks).setValue(data.remarks);
     }
 
-    // Optional columns J & K for partial quantity and balance
     if (cols.partialQty > 0 && data.partialReturn !== undefined) {
       sheet.getRange(rowIndex, cols.partialQty).setValue(data.partialReturn === '' ? '' : (parseFloat(data.partialReturn) || 0));
     }
@@ -407,9 +387,6 @@ function updateLoanRecord(tabType, rowIndex, data) {
   }
 }
 
-/**
- * Appends a new loan record to Google Sheets
- */
 function addNewLoanRecord(tabType, data) {
   try {
     const sheet = getTargetSheet(tabType);

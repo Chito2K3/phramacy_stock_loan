@@ -1,53 +1,40 @@
-# 🏥 Amang Rodriguez Memorial Medical Center - Pharmacy Expiry Monitoring System
+# 💊 Pharmacy Stock Loan Management System
+### Amang Rodriguez Memorial Medical Center (ARMMC)
+**Pharmacy Department — Materials & Supply Management**
 
-An automated Google Apps Script (GAS) application and data analysis suite for managing pharmacy storage inventory, FEFO (First-Expired, First-Out) expiration tracking, stock-out dispensing, and automated batch grouping for **Amang Rodriguez Memorial Medical Center (ARMMC)**.
+A custom Google Apps Script web application and Google Sheets integration designed to manage, monitor, and audit hospital pharmacy stock loans:
+- **`UTANG` (Borrowed Loans)**: Medicines borrowed from other hospitals/facilities (e.g. Cainta Municipal Hospital, PCMC, Rizal Medical Center) and partial return payments made by ARMMC.
+- **`PAUTANG` (Lent Loans)**: Medicines released/lent to other facilities and partial settlements returned by borrowing hospitals.
 
 ---
 
-## 🌟 Key Features
-
-1. **Smart Batch Grouping & Insertion (`sheet.insertRowAfter`)**:
-   - When registering a new batch for an existing medicine (e.g., `DMR000451 FLUCONAZOLE`), the system automatically identifies existing batches and inserts the new batch **directly below the latest batch** of that medicine in Google Sheets.
-   - For brand new medicines, appends to the inventory master list.
-2. **Stock-Out Dispensing & Real-Time Balance**:
-   - 1-click modal to deduct dispensed quantities from specific batches with stock overdraft prevention.
-   - Automatically updates `QTY STORAGE` in Google Sheets.
-3. **Automated Audit Logging (`STOCK_OUT_LOG`)**:
-   - Records every transaction with timestamps, medicine details, batch expiry date, quantity deducted, remaining stock balance, department/remarks, and user credentials.
-4. **Zero-Stock Replenishment & In-Place Editing**:
-   - Dedicated tab to review 0-quantity items, change the expiry date to the incoming batch, and replenish quantity directly.
-5. **FEFO Expiry Risk Classification**:
-   - 🔴 **2026 Critical / Immediate Risk** (FEFO priority dispensing)
-   - 🟠 **2027 Near-Term Risk**
-   - 🟢 **2028+ Safe Stock**
-   - ⚠️ **Missing Expiry Audit Alerts**
+## ✨ Key Features
+1. **Interactive Dashboard**: Real-time KPI summaries for Total Loans, Unpaid Records, Paid/Settled, and Partial Settlements.
+2. **Partial Payment & Settlement Tracker**:
+   - Calculates cumulative settled quantities and remaining balances automatically.
+   - Dynamic progress bar showing `% Settled`.
+   - "➕ Add New Payment / Return Qty" quick incremental entry.
+   - Automatically maintains a timestamped audit trail in Remarks:
+     `[YYYY-MM-DD] Partial settled: 240 pcs (Bal: 600 pcs)`
+   - Zero-balance safeguard: alerts when balance reaches 0 so the loan can transition to `PAID`.
+3. **Advanced Filters & Autocomplete**: Filter by Lender/Borrower facility with datalist suggestions, search by keywords, and filter by status (`ALL`, `UNPAID`, `PAID`, `PARTIAL`, `DONATION`).
+4. **Audit-Ready Printable Report**: Formatted print preview with department header, summary boxes, outstanding balance totals, and signature lines for hospital pharmacists and custodians.
+5. **Non-Breaking Sheet Compatibility**: Syncs directly with existing Google Sheet columns while supporting optional dedicated balance columns (`PARTIAL RETURNED` & `REMAINING BALANCE`).
 
 ---
 
 ## 📁 Repository Structure
-
-```
-├── gas_project/                      # Google Apps Script Source Files
-│   ├── Code.gs                       # Backend controller, menu & sheet APIs
-│   ├── Index.html                    # Main responsive Single-Page UI
-│   ├── Styles.html                   # Clinical CSS stylesheet & badges
-│   ├── JavaScript.html               # Frontend logic & RPC handlers
-│   └── README_SETUP.md               # Step-by-step GAS setup guide
-├── analyze.ps1                       # PowerShell Inventory Analysis Script
-├── run_analysis.ps1                  # Comprehensive Expiry Profiling Report
-├── sheet_1609045579.csv              # Raw inventory export snapshot
-└── NEW RAW FILE__EXPIRY_2026.xlsx    # Raw warehouse inventory workbook
+```text
+├── gas_project/
+│   ├── Code.gs                   # Apps Script backend API (getLoanData, updateLoanRecord, addNewLoanRecord)
+│   ├── Index.html                 # Complete standalone frontend web application (HTML, CSS, JS)
+│   ├── StockLoan_Code.gs         # Reference copy of backend script
+│   ├── StockLoan_Index.html      # Reference copy of frontend HTML
+│   └── README_STOCK_LOAN_SETUP.md # Detailed setup and deployment guide
+└── README.md
 ```
 
 ---
 
-## 🚀 Setup & Deployment Guide
-
-For full instructions on deploying this to Google Sheets or as a standalone Web App, see [`gas_project/README_SETUP.md`](gas_project/README_SETUP.md).
-
----
-
-## 👥 Institution
-
-**Amang Rodriguez Memorial Medical Center (ARMMC)**  
-*Pharmacy Storage & Inventory Management*
+## 🚀 Setup & Deployment
+Refer to [`gas_project/README_STOCK_LOAN_SETUP.md`](./gas_project/README_STOCK_LOAN_SETUP.md) for full instructions on copying the files into your Google Spreadsheet Apps Script editor and deploying the Web App.
