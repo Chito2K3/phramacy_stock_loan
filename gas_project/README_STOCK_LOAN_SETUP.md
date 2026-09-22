@@ -24,19 +24,19 @@ This documentation explains how to set up and update the **Stock Loan Management
 
 ---
 
-## 📋 Google Sheet Column Setup (Non-Breaking)
+## 📋 Google Sheet Column Setup (Streamlined)
 
 In your spreadsheet:
 - Sheet 1: **`UTANG`**
 - Sheet 2: **`PAUTANG`**
 
-The headers in Row 1 are:
-| Col A | Col B | Col C | Col D | Col E | Col F | Col G | Col H | Col I | Col J *(Optional)* | Col K *(Optional)* |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **DATE** | **LENDER / BORROWER** | **DOC NO.** | **ITEM CODE** | **ITEM DESCRIPTION** | **QTY** | **STATUS** | **DATE OF PAYMENT** | **REMARKS** | **PARTIAL RETURNED / PAID** | **REMAINING BALANCE** |
+The headers in Row 1 (with **Document No. removed**):
+| Col A | Col B | Col C | Col D | Col E | Col F | Col G | Col H | Col I *(Optional)* | Col J *(Optional)* |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **DATE** | **LENDER / BORROWER** | **ITEM CODE** | **ITEM DESCRIPTION** | **QTY** | **STATUS** | **DATE OF PAYMENT** | **REMARKS** | **PARTIAL RETURNED / PAID** | **REMAINING BALANCE** |
 
-> [!NOTE]
-> Columns J & K are **optional**. If Columns J & K are present, numbers sync directly to them. If they are not added yet, the system works automatically by tracking installments in Remarks and calculating balances cleanly on the fly!
+> [!TIP]
+> **Dynamic Compatibility**: The app automatically detects whether your sheet has removed `Document No.` or still has it. You don't have to worry about broken alignments!
 
 ---
 
@@ -50,31 +50,36 @@ The headers in Row 1 are:
 Inside the Apps Script editor:
 
 1. **`Code.gs`** (Script file):
-   - Replace the code in `Code.gs` with the code inside [`gas_project/StockLoan_Code.gs`](./StockLoan_Code.gs).
+   - Replace the code in `Code.gs` with the code inside [`gas_project/Code.gs`](./Code.gs).
 
-2. **`StockLoan_Index.html`** (HTML file):
-   - Click **➕ (Add a file)** > **HTML**.
-   - Name it `StockLoan_Index` (or if your file is already named `Index`, replace its contents with [`gas_project/StockLoan_Index.html`](./StockLoan_Index.html) and update the file reference in `Code.gs`).
-   - Paste the code from [`gas_project/StockLoan_Index.html`](./StockLoan_Index.html).
+2. **`Index.html`** (HTML file):
+   - Replace the code in `Index.html` with the code inside [`gas_project/Index.html`](./Index.html).
 
 3. Click **💾 Save project** (Ctrl + S).
 
 ---
 
-### Step 3: Update or Create Web App Deployment
+### Step 3: Update Web App Deployment
 1. At the top right of Apps Script, click **Deploy** > **Manage deployments**.
 2. Click the **✏️ Edit (pencil)** icon on your active Web App deployment.
 3. Under **Version**, select **New version**.
 4. Click **Deploy**.
-5. Your Web App URL will now run the new partial payment tracking system!
+5. Your Web App URL is now running the updated system!
 
 ---
 
-## 💡 How to Use Partial Payment in the App
-1. Open the Web App or click **💊 Stock Loan Management** > **Open Stock Loan Manager** inside Google Sheets.
-2. Click **✏️ Pullout / Edit** on any loan row.
-3. Select **PARTIAL** in the Status dropdown.
-4. The **⚖️ Partial Settlement Tracker** will appear:
-   - Enter how many units were returned today in **"➕ Add New Payment / Return Qty"**.
-   - Watch the remaining balance and progress bar update automatically.
-5. Click **💾 Save Changes**. The spreadsheet and web dashboard will update instantly!
+## 🛠️ One-Click Menu Utilities in Google Sheets
+
+When you open your spreadsheet, you will see the custom menu: **💊 Stock Loan Management**:
+1. **🗑️ Remove Document No. Column from Sheets**:
+   - Safely removes the Document No. column (Column C) across both `UTANG` and `PAUTANG` sheets and shifts following columns to the left.
+2. **🔄 Fix / Sync Status Dropdowns & Roboto Font**:
+   - Automatically sets the font of all records to **`Roboto`**.
+   - Formats **REMARKS** to clip mode (stops text from spilling horizontally across empty columns).
+   - Normalizes status values (e.g. fixes `"PARTIAL"` to exact dropdown chip `"PARTIAL PAYMENT"`).
+   - Re-applies colored dropdown pill chips to all records.
+
+---
+
+## 🔠 Automatic Uppercase Input
+All text fields in the web application (Facility, Item Code, Item Description, Remarks, Search) are styled with `text-transform: uppercase` and saved to Google Sheets strictly in **`UPPERCASE`**.
