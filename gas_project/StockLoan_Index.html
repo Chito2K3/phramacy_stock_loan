@@ -1065,7 +1065,7 @@
         </div>
         <div class="stat-icon">✅</div>
       </div>
-      <div class="stat-card clickable" onclick="quickFilterStatus('PARTIAL')" style="border-left: 4px solid #0284c7;"
+      <div class="stat-card clickable" onclick="quickFilterStatus('PARTIAL PAYMENT')" style="border-left: 4px solid #0284c7;"
         title="Click to view Partial Settlements">
         <div class="stat-info">
           <h3>Partial Settlements</h3>
@@ -1747,7 +1747,14 @@
     function quickFilterStatus(status) {
       const el = document.getElementById('statusFilter');
       if (el) {
-        el.value = status;
+        let target = status;
+        if (String(status).toUpperCase().includes('PARTIAL')) {
+          target = 'PARTIAL PAYMENT';
+        }
+        el.value = target;
+        if (!el.value && String(status).toUpperCase().includes('PARTIAL')) {
+          el.value = 'PARTIAL';
+        }
         applyFilters();
       }
     }
@@ -1762,7 +1769,7 @@
           return false;
         }
 
-        if (statusQuery !== 'ALL') {
+        if (statusQuery && statusQuery !== 'ALL') {
           const s = String(r.status || '').toUpperCase();
           if (statusQuery === 'UNPAID' && !s.includes('UNPAID')) return false;
           if (statusQuery === 'PAID' && (s !== 'PAID' && !s.startsWith('PAID'))) return false;
